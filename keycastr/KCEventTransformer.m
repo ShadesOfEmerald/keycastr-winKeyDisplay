@@ -56,10 +56,10 @@ static void _onSelectedKeyboardInputSourceChanged(CFNotificationCenterRef aCente
     BOOL _inputSourceChangeObserved;
 }
 
-static NSString* kCommandKeyString = @"\xe2\x8c\x98";
-static NSString* kOptionKeyString = @"\xe2\x8c\xa5";
-static NSString* kControlKeyString = @"\xe2\x8c\x83";
-static NSString* kShiftKeyString = @"\xe2\x87\xa7";
+static NSString* kCommandKeyString = @"Win ";
+static NSString* kOptionKeyString = @"Alt ";
+static NSString* kControlKeyString = @"Ctrl ";
+static NSString* kShiftKeyString = @"Shift ";
 static NSString* kLeftTabString = @"\xe2\x87\xa4";
 
 #define UTF8(x) [NSString stringWithUTF8String:x]
@@ -223,37 +223,28 @@ static NSString* kLeftTabString = @"\xe2\x87\xa4";
     
     BOOL needsShiftGlyph = NO;
     
-    NSMutableString *mutableResponse = [NSMutableString string];
+  NSMutableString *mutableResponse = [NSMutableString string];
 
-    if (_modifiers & NSEventModifierFlagControl)
-	{
-		[mutableResponse appendString:kControlKeyString];
-	}
+    if (_modifiers & NSEventModifierFlagControl) {
+        [mutableResponse appendString:kControlKeyString];
+    }
 
-	if (hasOptionModifier && (isCommand || !_displayModifiedCharacters))
-	{
-		[mutableResponse appendString:kOptionKeyString];
-	}
+    if (hasOptionModifier && (isCommand || !_displayModifiedCharacters)) {
+        [mutableResponse appendString:kOptionKeyString];
+    }
 
-    if (hasShiftModifier)
-	{
-		if (isCommand)
-			[mutableResponse appendString:kShiftKeyString];
-		else if (hasOptionModifier && !_displayModifiedCharacters)
+    if (hasShiftModifier) {
+        if (isCommand || (hasOptionModifier && !_displayModifiedCharacters) || !_displayModifiedCharacters) {
             [mutableResponse appendString:kShiftKeyString];
-        else
-			needsShiftGlyph = !_displayModifiedCharacters;
-	}
+            needsShiftGlyph = NO;
+        } else {
+            needsShiftGlyph = YES;
+        }
+    }
 
-    if (_modifiers & NSEventModifierFlagCommand)
-	{
-		if (needsShiftGlyph)
-		{
-			[mutableResponse appendString:kShiftKeyString];
-			needsShiftGlyph = NO;
-		}
-		[mutableResponse appendString:kCommandKeyString];
-	}
+    if (_modifiers & NSEventModifierFlagCommand) {
+        [mutableResponse appendString:kCommandKeyString];
+    }
 
     if ([event isKindOfClass:[KCMouseEvent class]]) {
         if (needsShiftGlyph) {
