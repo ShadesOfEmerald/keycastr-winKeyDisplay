@@ -1,0 +1,31 @@
+name: Xcode - Build and Analyze
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # This adds a manual "Run" button to the Actions tab
+
+jobs:
+  build:
+    name: Build KeyCastr
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          xcodebuild clean build \
+            -scheme KeyCastr \
+            -configuration Release \
+            -derivedDataPath ./build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Upload App
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeyCastr-Windows-Style
+          path: ./build/Build/Products/Release/KeyCastr.app
