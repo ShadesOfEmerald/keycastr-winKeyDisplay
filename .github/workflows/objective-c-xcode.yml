@@ -3,7 +3,7 @@ name: Xcode - Build and Analyze
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # This adds a manual "Run" button to the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,16 +16,40 @@ jobs:
 
       - name: Build
         run: |
+          # 1. Find the project file
+          PROJECT_PATH=$(find . -name "*.xcodeproj" -print -quit)
+          
+          if [ -z "$PROJECT_PATH" ]; then
+            echo "Error: Could not find an .xcodeproj file."
+            exit 1
+          fi
+          
+          echo "Building Project: $PROJECT_PATH"
+
+          # 2. Execute build
           xcodebuild clean build \
+            -project "$PROJECT_PATH" \
             -scheme KeyCastr \
             -configuration Release \
-            -derivedDataPath ./build \
+            -derivedDataPath "$GITHUB_WORKSPACE/build_output" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
+
+      - name: Verify and Locate App
+        run: |
+          echo "Searching for the compiled .app file..."
+          # Find the .app folder and save its path to the environment
+          APP_PATH=$(find "$GITHUB_WORKSPACE/build_output" -name "KeyCastr.app" -type d -print -quit)
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: KeyCastr.app not found in build_output."
+            exit 1
+          fi
+          echo "APP_FOUND=$APP_PATH" >> $GITHUB_ENV
+          echo "Found app at: $APP_PATH"
 
       - name: Upload App
         uses: actions/upload-artifact@v4
         with:
           name: KeyCastr-Windows-Style
-          path: ./build/Build/Products/Release/KeyCastr.app
+          path: ${{ env.APP_FOUND }}
